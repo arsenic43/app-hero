@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commandes Apéro</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f0; color: #1a1a18; min-height: 100vh; padding: 2rem 1rem; }
+    .app { max-width: 680px; margin: 0 auto; }
+    .header { margin-bottom: 1.5rem; }
+    .header h1 { font-size: 24px; font-weight: 600; }
+    .header p { font-size: 14px; color: #888; margin-top: 4px; }
+    .section-title { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+    /* Boissons */
+    .drink-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+    .drink-card { background: #fff; border: 1px solid #e0dfd8; border-radius: 12px; padding: 12px; cursor: pointer; text-align: center; transition: border-color 0.15s; }
+    .drink-card:hover { border-color: #aaa; }
+    .drink-card.selected { border: 2px solid #7F77DD; background: #EEEDFE; }
+    .drink-icon { font-size: 28px; margin-bottom: 6px; }
+    .drink-name { font-size: 13px; font-weight: 600; }
+    .drink-price { font-size: 12px; color: #888; margin-top: 2px; }
+    /* Formulaire */
+    .order-form { background: #fff; border: 1px solid #e0dfd8; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+    .form-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+    .form-row label { font-size: 13px; color: #888; min-width: 70px; }
+    .team-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .team-btn { padding: 7px 14px; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f0; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+    .team-btn:hover { border-color: #7F77DD; }
+    .team-btn.selected { background: #EEEDFE; border: 2px solid #7F77DD; color: #3C3489; }
+    .qty-row { display: flex; align-items: center; gap: 8px; }
+    .qty-btn { width: 30px; height: 30px; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f0; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+    .qty-btn:hover { background: #e8e8e2; }
+    .qty-val { font-size: 15px; font-weight: 600; min-width: 24px; text-align: center; }
+    textarea { flex: 1; min-width: 120px; resize: none; height: 56px; font-family: inherit; font-size: 14px; border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px; }
+    textarea:focus { outline: none; border-color: #7F77DD; }
+    .add-btn { width: 100%; padding: 11px; background: #7F77DD; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+    .add-btn:hover { background: #534AB7; }
+    /* Liste commandes */
+    .orders-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+    .order-item { background: #fff; border: 1px solid #e0dfd8; border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px; }
+    .order-avatar { width: 36px; height: 36px; border-radius: 50%; background: #CECBF6; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #3C3489; flex-shrink: 0; margin-top: 2px; }
+    .order-info { flex: 1; }
+    .order-name { font-size: 14px; font-weight: 600; }
+    .order-detail { font-size: 12px; color: #888; margin-top: 2px; }
+    .order-note { font-size: 12px; color: #aaa; margin-top: 4px; font-style: italic; }
+    .order-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .order-price { font-size: 14px; font-weight: 600; color: #534AB7; }
+    .order-delete { background: none; border: none; cursor: pointer; font-size: 16px; color: #ccc; padding: 2px; }
+    .order-delete:hover { color: #E24B4A; }
+    /* Récap */
+    .recap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+    .recap-card { background: #f0efe8; border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+    .recap-icon { font-size: 22px; }
+    .recap-name { font-size: 13px; font-weight: 600; }
+    .recap-count { font-size: 12px; color: #888; margin-top: 2px; }
+    .recap-total { font-size: 13px; font-weight: 600; color: #534AB7; white-space: nowrap; margin-left: auto; }
+    /* Résumé */
+    .summary { background: #f0efe8; border-radius: 12px; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .summary-stats { display: flex; gap: 1.5rem; }
+    .stat { text-align: center; }
+    .stat-val { font-size: 22px; font-weight: 700; }
+    .stat-label { font-size: 12px; color: #888; margin-top: 2px; }
+    .reset-btn { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px 14px; font-size: 13px; color: #666; cursor: pointer; }
+    .reset-btn:hover { background: #f5f5f0; }
+    .empty { text-align: center; padding: 1.5rem; color: #aaa; font-size: 14px; }
+    .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #CECBF6; color: #3C3489; margin-left: 6px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Commandes apéro</h1>
+    <p>Ajoutez les commandes de chaque équipe</p>
+  </div>
+
+  <p class="section-title">Choisir une boisson</p>
+  <div class="drink-grid" id="drinkGrid"></div>
+
+  <div class="order-form">
+    <div class="form-row" style="align-items: flex-start;">
+      <label style="padding-top: 6px;">Équipe</label>
+      <div class="team-btns" id="teamBtns"></div>
+    </div>
+    <div class="form-row">
+      <label>Quantité</label>
+      <div class="qty-row">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <span class="qty-val" id="qtyDisplay">1</span>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+    <div class="form-row" style="align-items: flex-start;">
+      <label style="padding-top: 8px;">Note</label>
+      <textarea id="orderNote" placeholder="ex: sans glaçons, bien frais..."></textarea>
+    </div>
+    <button class="add-btn" onclick="addOrder()">Ajouter la commande</button>
+  </div>
+
+  <p class="section-title">Commandes <span class="badge" id="countBadge">0</span></p>
+  <div id="ordersList"><div class="empty">Aucune commande pour l'instant</div></div>
+
+  <p class="section-title" id="recapTitle" style="display:none;">Récapitulatif par boisson</p>
+  <div class="recap-grid" id="recapGrid"></div>
+
+  <div class="summary">
+    <div class="summary-stats">
+      <div class="stat"><div class="stat-val" id="totalTeams">0</div><div class="stat-label">équipes</div></div>
+      <div class="stat"><div class="stat-val" id="totalDrinks">0</div><div class="stat-label">verres</div></div>
+      <div class="stat"><div class="stat-val" id="totalPrice">0,00 €</div><div class="stat-label">total</div></div>
+    </div>
+    <button class="reset-btn" onclick="resetAll()">Tout effacer</button>
+  </div>
+</div>
+
+<script>
+const drinks = [
+  { id: 1, name: "Bière blonde", icon: "🍺", price: 3.50 },
+  { id: 2, name: "Picon bière",  icon: "🍻", price: 4.50 },
+  { id: 3, name: "Coca Cola",    icon: "🥤", price: 3.00 },
+  { id: 4, name: "Perrier citron", icon: "🍋", price: 3.00 },
+  { id: 5, name: "Diabolo menthe", icon: "🌿", price: 2.50 },
+  { id: 6, name: "Jus de tomate",  icon: "🍅", price: 3.00 },
+];
+const teams = ['FabLab','Equipe1','Equipe2','Equipe3','Direction','BCI','Veille','Gaya'];
+const initials = { FabLab:'FL', Equipe1:'E1', Equipe2:'E2', Equipe3:'E3', Direction:'DR', BCI:'BC', Veille:'VE', Gaya:'GA' };
+
+let selectedDrink = null, selectedTeam = null, qty = 1, orders = [], nextId = 1;
+
+function initTeamBtns() {
+  document.getElementById('teamBtns').innerHTML = teams.map(t =>
+    `<button class="team-btn" onclick="selectTeam('${t}')">${t}</button>`
+  ).join('');
+}
+
+function renderDrinks() {
+  document.getElementById('drinkGrid').innerHTML = drinks.map(d =>
+    `<div class="drink-card ${selectedDrink?.id === d.id ? 'selected' : ''}" onclick="selectDrink(${d.id})">
+      <div class="drink-icon">${d.icon}</div>
+      <div class="drink-name">${d.name}</div>
+      <div class="drink-price">${d.price.toFixed(2).replace('.',',')} €</div>
+    </div>`
+  ).join('');
+}
+
+function selectDrink(id) { selectedDrink = drinks.find(d => d.id === id); renderDrinks(); }
+function selectTeam(name) {
+  selectedTeam = name;
+  document.querySelectorAll('.team-btn').forEach(b => b.classList.toggle('selected', b.textContent === name));
+}
+function changeQty(d) { qty = Math.max(1, Math.min(10, qty + d)); document.getElementById('qtyDisplay').textContent = qty; }
+
+function addOrder() {
+  const note = document.getElementById('orderNote').value.trim();
+  if (!selectedTeam || !selectedDrink) return;
+  orders.push({ id: nextId++, name: selectedTeam, drink: { ...selectedDrink }, qty, note });
+  document.getElementById('orderNote').value = '';
+  qty = 1; document.getElementById('qtyDisplay').textContent = '1';
+  renderAll();
+}
+
+function deleteOrder(id) { orders = orders.filter(o => o.id !== id); renderAll(); }
+
+function renderAll() { renderOrders(); renderRecap(); updateSummary(); }
+
+function renderOrders() {
+  const list = document.getElementById('ordersList');
+  document.getElementById('countBadge').textContent = orders.length;
+  if (!orders.length) { list.innerHTML = '<div class="empty">Aucune commande pour l\'instant</div>'; return; }
+  list.innerHTML = orders.map(o =>
+    `<div class="order-item">
+      <div class="order-avatar">${initials[o.name] || o.name.slice(0,2).toUpperCase()}</div>
+      <div class="order-info">
+        <div class="order-name">${o.name}</div>
+        <div class="order-detail">${o.drink.icon} ${o.drink.name} × ${o.qty}</div>
+        ${o.note ? `<div class="order-note">${o.note}</div>` : ''}
+      </div>
+      <div class="order-right">
+        <div class="order-price">${(o.drink.price * o.qty).toFixed(2).replace('.',',')} €</div>
+        <button class="order-delete" onclick="deleteOrder(${o.id})">✕</button>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function renderRecap() {
+  const title = document.getElementById('recapTitle');
+  const grid = document.getElementById('recapGrid');
+  if (!orders.length) { title.style.display = 'none'; grid.innerHTML = ''; return; }
+  title.style.display = 'block';
+  const map = {};
+  orders.forEach(o => {
+    if (!map[o.drink.id]) map[o.drink.id] = { drink: o.drink, count: 0, total: 0 };
+    map[o.drink.id].count += o.qty;
+    map[o.drink.id].total += o.drink.price * o.qty;
+  });
+  grid.innerHTML = Object.values(map).map(r =>
+    `<div class="recap-card">
+      <div class="recap-icon">${r.drink.icon}</div>
+      <div class="recap-info">
+        <div class="recap-name">${r.drink.name}</div>
+        <div class="recap-count">${r.count} verre${r.count > 1 ? 's' : ''}</div>
+      </div>
+      <div class="recap-total">${r.total.toFixed(2).replace('.',',')} €</div>
+    </div>`
+  ).join('');
+}
+
+function updateSummary() {
+  document.getElementById('totalTeams').textContent = new Set(orders.map(o => o.name)).size;
+  document.getElementById('totalDrinks').textContent = orders.reduce((s, o) => s + o.qty, 0);
+  document.getElementById('totalPrice').textContent = orders.reduce((s, o) => s + o.drink.price * o.qty, 0).toFixed(2).replace('.',',') + ' €';
+}
+
+function resetAll() { if (!orders.length) return; orders = []; renderAll(); }
+
+initTeamBtns();
+renderDrinks();
+</script>
+</body>
+</html>
