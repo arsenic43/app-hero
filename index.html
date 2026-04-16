@@ -25,6 +25,13 @@
 
     .section-title { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
 
+    .step-card { background: #fff; border: 1px solid #e0dfd8; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+
+    .team-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .team-btn { padding: 10px 8px; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f0; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-align: center; width: 100%; }
+    .team-btn:hover { border-color: #7F77DD; }
+    .team-btn.selected { background: #EEEDFE; border: 2px solid #7F77DD; color: #3C3489; }
+
     .drink-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
     .drink-card { background: #fff; border: 1px solid #e0dfd8; border-radius: 12px; padding: 12px; cursor: pointer; text-align: center; transition: border-color 0.15s; }
     .drink-card:hover { border-color: #aaa; }
@@ -36,10 +43,6 @@
     .order-form { background: #fff; border: 1px solid #e0dfd8; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
     .form-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
     .form-row label { font-size: 13px; color: #888; min-width: 70px; }
-    .team-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-    .team-btn { padding: 7px 14px; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f0; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-    .team-btn:hover { border-color: #7F77DD; }
-    .team-btn.selected { background: #EEEDFE; border: 2px solid #7F77DD; color: #3C3489; }
     .qty-row { display: flex; align-items: center; gap: 8px; }
     .qty-btn { width: 30px; height: 30px; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f0; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
     .qty-btn:hover { background: #e8e8e2; }
@@ -112,8 +115,7 @@
 
   <div class="config-banner" id="configBanner">
     <strong>Configuration requise —</strong> ouvrez ce fichier dans un éditeur de texte et remplacez
-    <code>VOTRE_API_KEY</code> et <code>VOTRE_BIN_ID</code> par vos identifiants JSONBin.io
-    (voir instructions dans le README ou demandez à Claude).
+    <code>VOTRE_API_KEY</code> et <code>VOTRE_BIN_ID</code> par vos identifiants JSONBin.io.
   </div>
 
   <div class="header">
@@ -127,14 +129,18 @@
     </div>
   </div>
 
-  <p class="section-title">Choisir une boisson</p>
+  <!-- ÉTAPE 1 : Identification -->
+  <p class="section-title">1. Qui commande ?</p>
+  <div class="step-card">
+    <div class="team-btns" id="teamBtns"></div>
+  </div>
+
+  <!-- ÉTAPE 2 : Boisson -->
+  <p class="section-title">2. Choisir une boisson</p>
   <div class="drink-grid" id="drinkGrid"></div>
 
+  <!-- Quantité + note + bouton -->
   <div class="order-form">
-    <div class="form-row" style="align-items:flex-start;">
-      <label style="padding-top:6px;">Équipe</label>
-      <div class="team-btns" id="teamBtns"></div>
-    </div>
     <div class="form-row">
       <label>Quantité</label>
       <div class="qty-row">
@@ -150,6 +156,7 @@
     <button class="add-btn" id="addBtn" onclick="addOrder()">Ajouter la commande</button>
   </div>
 
+  <!-- Liste des commandes -->
   <p class="section-title">Commandes <span class="badge" id="countBadge">0</span></p>
   <div id="ordersList"><div class="empty">Chargement...</div></div>
 
@@ -173,12 +180,12 @@
   // ============================================================
   //  CONFIGURATION — remplacez ces deux valeurs
   // ============================================================
-  const API_KEY = '$2a$10$416NX3vpd0vtJaD0SWVGDejtZ3SUvAW3S7Iu2/pKb9ho0Sro3AL.K';
-  const BIN_ID  = '69da9ea2856a68218922c61f';
+  const API_KEY = 'VOTRE_API_KEY';
+  const BIN_ID  = 'VOTRE_BIN_ID';
   // ============================================================
 
-  const BASE_URL    = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-  const HEADERS     = { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY };
+  const BASE_URL     = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+  const HEADERS      = { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY };
   const isConfigured = () => API_KEY !== 'VOTRE_API_KEY' && BIN_ID !== 'VOTRE_BIN_ID';
 
   const drinks = [
@@ -189,10 +196,12 @@
     { id: 5, name: "Diabolo menthe", icon: "🌿", price: 2.50 },
     { id: 6, name: "Jus de tomate",  icon: "🍅", price: 3.00 },
   ];
-  const teams    = ['FabLab','Equipe1','Equipe2','Equipe3','Direction','BCI','Veille','Gaya'];
-  const initials = { FabLab:'FL', Equipe1:'E1', Equipe2:'E2', Equipe3:'E3', Direction:'DR', BCI:'BC', Veille:'VE', Gaya:'GA'};
+  const teams    = ['FabLab','Equipe1','Equipe2','Equipe3','Direction','BCI','Veille','Gaya','Sexpert'];
+  const initials = { FabLab:'FL', Equipe1:'E1', Equipe2:'E2', Equipe3:'E3', Direction:'DR', BCI:'BC', Veille:'VE', Gaya:'GA', Sexpert:'SX' };
 
   let selectedDrink = null, selectedTeam = null, qty = 1, orders = [], nextId = 1;
+
+  function getInitials(name) { return initials[name] || name.slice(0,2).toUpperCase(); }
 
   function setStatus(state, text) {
     document.getElementById('statusDot').className = 'status-dot ' + state;
@@ -209,9 +218,7 @@
       orders = json.record.orders || [];
       nextId = json.record.nextId || orders.length + 1;
       setStatus('ok', 'Synchronisé');
-    } catch {
-      setStatus('err', 'Erreur de connexion');
-    }
+    } catch { setStatus('err', 'Erreur de connexion'); }
     renderAll();
   }
 
@@ -220,21 +227,23 @@
     setStatus('loading', 'Sauvegarde…');
     try {
       const res = await fetch(BASE_URL, {
-        method: 'PUT',
-        headers: HEADERS,
+        method: 'PUT', headers: HEADERS,
         body: JSON.stringify({ orders, nextId })
       });
       if (!res.ok) throw new Error();
       setStatus('ok', 'Synchronisé');
-    } catch {
-      setStatus('err', 'Erreur de sauvegarde');
-    }
+    } catch { setStatus('err', 'Erreur de sauvegarde'); }
   }
 
   function initTeamBtns() {
     document.getElementById('teamBtns').innerHTML = teams.map(t =>
       `<button class="team-btn" onclick="selectTeam('${t}')">${t}</button>`
     ).join('');
+  }
+
+  function selectTeam(name) {
+    selectedTeam = name;
+    document.querySelectorAll('.team-btn').forEach(b => b.classList.toggle('selected', b.textContent === name));
   }
 
   function renderDrinks() {
@@ -248,10 +257,6 @@
   }
 
   function selectDrink(id) { selectedDrink = drinks.find(d => d.id === id); renderDrinks(); }
-  function selectTeam(name) {
-    selectedTeam = name;
-    document.querySelectorAll('.team-btn').forEach(b => b.classList.toggle('selected', b.textContent === name));
-  }
   function changeQty(d) { qty = Math.max(1, Math.min(10, qty + d)); document.getElementById('qtyDisplay').textContent = qty; }
 
   async function addOrder() {
@@ -261,6 +266,8 @@
     orders.push({ id: nextId++, name: selectedTeam, drink: { ...selectedDrink }, qty, note });
     document.getElementById('orderNote').value = '';
     qty = 1; document.getElementById('qtyDisplay').textContent = '1';
+    selectedDrink = null;
+    renderDrinks();
     renderAll();
     await saveData();
     document.getElementById('addBtn').disabled = false;
@@ -289,7 +296,7 @@
     if (!orders.length) { list.innerHTML = '<div class="empty">Aucune commande pour l\'instant</div>'; return; }
     list.innerHTML = orders.map(o =>
       `<div class="order-item">
-        <div class="order-avatar">${initials[o.name] || o.name.slice(0,2).toUpperCase()}</div>
+        <div class="order-avatar">${getInitials(o.name)}</div>
         <div class="order-info">
           <div class="order-name">${o.name}</div>
           <div class="order-detail">${o.drink.icon} ${o.drink.name} × ${o.qty}</div>
